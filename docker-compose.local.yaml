@@ -1,0 +1,150 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./src/public:/var/www/sf/public
+      - ./_docker/nginx/conf.d/:/etc/nginx/conf.d
+    ports:
+      - "8011:80"
+    container_name: ${PROJECT_PREFIX}_nginx
+      #- /home/user/.ssh:/root/.ssh:cached
+    depends_on:
+      - app
+      - redis
+      - db
+      #- soketi
+    networks:
+      - sf
+
+  db:
+    image: postgres:17
+    container_name: ${PROJECT_PREFIX}_db
+    command: -c 'max_connections=400'
+    ports:
+      - 5441:5432
+    environment:
+      - POSTGRES_USER=sf_root
+      - POSTGRES_PASSWORD=sf_qwerty
+      - POSTGRES_DB=sf
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./_docker/pgsql/pgdata:/var/lib/postgresql/data/pgdata
+    restart: unless-stopped
+    tty: true
+    networks:
+      - sf
+
+  app:
+    build:
+      context: ./
+      dockerfile: _docker/app/Dockerfile_local
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    container_name: ${PROJECT_PREFIX}_app
+    volumes:
+      - ./src:/var/www/sf
+    networks:
+      - sf
+
+  redis:
+    image: redis:alpine
+    container_name: ${PROJECT_PREFIX}_redis
+    restart: unless-stopped
+    volumes:
+      - ./_docker/redis/data:/data
+    ports:
+      - 6374:6379
+    networks:
+      - sf
+
+#  composer:
+#    image: composer
+#    container_name: sf_composer
+#    volumes:
+#      - ./:/var/www/sf
+#      - ./_docker/cache/composer:/tmp/cache
+#    working_dir: /var/www/sf
+#    depends_on:
+#      - php
+##    user: sf
+#    #entrypoint: ['composer', '--prefer-dist -vvv', '--ignore-platform-reqs']
+#    entrypoint: ['composer']
+#    networks:
+#      - sf
+#
+#  npm:
+#    image: node:13.7
+#    container_name: sf_npm
+#    volumes:
+#      - ./:/var/www/sf
+#    ports:
+##      - 3010:3010
+#      - 3011:3011
+#    working_dir: /var/www/sf
+#    entrypoint: ['npm']
+#    networks:
+#      - sf
+#
+#  artisan:
+#    build:
+#      context: ./
+#      dockerfile: _docker/app/Dockerfile_local
+#      args:
+#        - UID=${UID:-1000}
+#        - GID=${GID:-1000}
+#    container_name: sf_artisan
+#    volumes:
+#      - ./:/var/www/sf
+#    depends_on:
+#      - db
+#    working_dir: /var/www/sf
+#    entrypoint: ['php', '/var/www/sf/artisan']
+#    networks:
+#      - sf
+
+#  echo:
+#    image: oanhnn/laravel-echo-server
+#    container_name: echo
+#    restart: unless-stopped
+#    user: 1000:1000
+#    ports:
+#      - 6001:6001
+#    depends_on:
+#      - redis
+#    volumes:
+#      - ./src/app:/app
+#    networks:
+#      - laravel
+#    environment:
+#      REDIS_HOST:     redis
+#      REDIS_PORT:     6379
+#      REDIS_PREFIX:   ""
+#      REDIS_DB:       4
+#      REDIS_PASSWORD: null
+#
+#  soketi:
+#    container_name: 'soketi_server'
+#    restart: unless-stopped
+#    image: 'quay.io/soketi/soketi:0.17-16-alpine'
+#    ports:
+#      - '${SOKETI_PORT:-6002}:6002'
+#      - '${SOKETI_METRICS_SERVER_PORT:-9601}:9601'
+#    environment:
+#      - DEBUG='${DEBUG:-1}'
+#      - PUSHER_APP_ID='${PUSHER_APP_ID:-some-id}'
+#      - PUSHER_APP_KEY='${PUSHER_APP_KEY:-app-key}'
+#      - PUSHER_APP_SECRET='${PUSHER_APP_SECRET:-some-app-secret}'
+#      - PUSHER_HOST='${PUSHER_HOST:-127.0.0.1}'
+#      - PUSHER_PORT= '${PUSHER_PORT:-6002}'
+#      - PUSHER_SCHEME='${PUSHER_SCHEME:-http}' # or https
+#      - METRICS_SERVER_PORT=${METRICS_SERVER_PORT-9601}
+#      - DEFAULT_APP_ENABLE_CLIENT_MESSAGES=${DEFAULT_APP_ENABLE_CLIENT_MESSAGES-false}
+#    networks:
+#      - laravel
+
+networks:
+  sf:
+    name: ${PROJECT_PREFIX}_net

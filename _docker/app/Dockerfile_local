@@ -1,0 +1,70 @@
+FROM php:8.3-fpm
+
+RUN pecl install redis && docker-php-ext-enable redis
+
+RUN pecl install xdebug && docker-php-ext-enable xdebug
+
+RUN apt-get update && apt-get install -y \
+      apt-utils \
+      libpq-dev \
+#      libpng-dev \
+      libzip-dev \
+      zip unzip \
+      nano \
+#      libwebp-dev \
+#      libjpeg-dev \
+      locales \
+      libonig-dev \
+      git && \
+      docker-php-ext-install pdo && \
+      docker-php-ext-install pdo_pgsql && \
+      docker-php-ext-install pgsql && \
+      docker-php-ext-install bcmath && \
+      docker-php-ext-install zip && \
+      docker-php-ext-install exif && \
+      apt-get clean && \
+      rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+#RUN docker-php-ext-install mysqli pdo pdo_mysql mbstring opcache zip
+RUN docker-php-ext-install mbstring opcache
+#RUN docker-php-ext-enable pdo_mysql zip
+RUN docker-php-ext-enable zip
+
+COPY ./_docker/app/php.ini /usr/local/etc/php/conf.d/php.ini
+
+COPY . /var/www/sf
+WORKDIR /var/www/sf
+
+# Install composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN curl -sS https://getcomposer.org/installer | php -- \
+    --filename=composer \
+    --install-dir=/usr/local/bin
+# alias
+RUN echo "alias a='artisan'" >> /root/.bashrc
+
+#RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
+#RUN apt-get install -y nodejs
+
+#ENTRYPOINT composer install \
+#    --no-interaction \
+#    --no-plugins \
+#    --no-suggest \
+#    --no-scripts \
+#    --no-autoloader \
+#    --prefer-dist && \
+#    composer dump-autoload  --no-scripts --optimize && \
+#ENTRYPOINT php-fpm
+#    chmod 777 -R /var/www/genshindrop && \
+#    chmod -R 777 /var/www/genshindrop/bootstrap/cache && \
+#    cp .env.example .env && \
+#    php artisan key:generate && \
+
+RUN usermod -u 1000 www-data
+RUN groupmod -g 1000 www-data
+#RUN addgroup --gid 1000 www-data
+#RUN adduser --disabled-password --gecos '' --uid 1000 --gid 1000 www-data
+USER www-data
+
+EXPOSE 9000
+
