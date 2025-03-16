@@ -4,6 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    oauth.vk.redirect_uri: '%env(OAUTH_VK_REDIRECT_URI)%'
 
 services:
     # default configuration for services in *this* file
@@ -22,3 +23,26 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+#    hwi_oauth.user.provider.entity:
+#        class: HWI\Bundle\OAuthBundle\Security\Core\User\EntityUserProvider
+#        arguments:
+#            $class: App\Entity\User
+#            $properties:
+#                'vkontakte': 'vkontakte'
+
+    my.vk_ouath_aware.user_provider.service:
+        class: App\Security\OAuth\Owners\Vk\VkOAuthAwareUserProvider
+
+    security.http_utils:
+        class: App\CustomHttpUtils
+        autowire: true
+        arguments:
+            $urlGenerator: '@router'
+            $urlMatcher: '@router'
+            $vkRedirectUri: '%oauth.vk.redirect_uri%'
+#            $urlMatcher: '@router'
+#                'urlGenerator': router
+#                'urlMatcher': router
+#                'vkontakte': 'vkontakte'
+        #                'google': 'google'

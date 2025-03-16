@@ -44,8 +44,11 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
     container_name: ${PROJECT_PREFIX}_app
+    environment:
+      PHP_IDE_CONFIG: "serverName=SF_OAUTH"
     volumes:
       - ./src:/var/www/sf
+      - ./_docker/app/zzz-xdebug.ini:/usr/local/etc/php/conf.d/zzz-xdebug.ini
     networks:
       - sf
 

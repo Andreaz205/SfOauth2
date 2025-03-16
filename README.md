@@ -15,5 +15,12 @@ composer require --dev symfony/profiler-pack
 composer require symfony/orm-pack //Doctrine
 composer require --dev phpunit/phpunit
 composer require lexik/jwt-authentication-bundle
-    php bin/console lexik:jwt:generate-keypair
+
+php bin/console lexik:jwt:generate-keypair
+
+HWIOAuthBundle - бандл для oauth2 полностью кастомизируемый
+
+https://github.com/hwi/HWIOAuthBundle/issues/1824
+https://dev.to/jszutkowski/securing-api-with-jwt-in-symfony-36dk
+
 
